@@ -6,4 +6,6 @@ bin/
 tests/*
 !tests/*.nim*
 
+sample.csv
+
 *.swp

@@ -1,0 +1,9 @@
+name,comment,data_type,default_val,not_null,is_primary
+id,task id,INTEGER,,1,1
+title,task title,TEXT,,1,
+status,task status,INTEGER,,1,
+parent,parent task id,INTEGER,0,1,
+begin_at,begin date,DATETIME,,,
+end_at,end date,DATETIME,,,
+duration,,TEXT,,,
+updated_at,updated date time,DATETIME,'9999-12-31',1,
