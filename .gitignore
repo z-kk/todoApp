@@ -1,3 +1,9 @@
 nimcache/
 nimblecache/
 htmldocs/
+
+bin/
+tests/*
+!tests/*.nim*
+
+*.swp
