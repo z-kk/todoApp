@@ -61,7 +61,7 @@ proc createTaskTable*(db: DbConn) =
     updated_at DATETIME default '9999-12-31' not null
   )""".sql
   db.exec(sql)
-proc insertTaskTable*(db: DbConn, rowData: TaskTable) =
+proc tryInsertTaskTable*(db: DbConn, rowData: TaskTable): int64 =
   var vals: seq[string]
   var sql = "insert into task("
   if rowData.id > 0:
@@ -89,11 +89,14 @@ proc insertTaskTable*(db: DbConn, rowData: TaskTable) =
     sql &= &"{rowData.id},"
   sql &= "?,".repeat(vals.len)
   sql[^1] = ')'
-  db.exec(sql.sql, vals)
+  return db.tryInsertID(sql.sql, vals)
+proc insertTaskTable*(db: DbConn, rowData: TaskTable) =
+  let res = tryInsertTaskTable(db, rowData)
+  if res < 0: db.dbError
 proc insertTaskTable*(db: DbConn, rowDataSeq: seq[TaskTable]) =
   for rowData in rowDataSeq:
     db.insertTaskTable(rowData)
-proc selectTaskTable*(db: DbConn, whereStr = "", orderBy: seq[string] = @[], whereVals: varargs[string, `$`]): seq[TaskTable] =
+proc selectTaskTable*(db: DbConn, whereStr = "", orderBy: seq[string], whereVals: varargs[string, `$`]): seq[TaskTable] =
   var sql = "select * from task"
   if whereStr != "":
     sql &= " where " & whereStr
@@ -112,6 +115,8 @@ proc selectTaskTable*(db: DbConn, whereStr = "", orderBy: seq[string] = @[], whe
     res.setDataTaskTable("duration", row[TaskCol.duration.ord])
     res.setDataTaskTable("updated_at", row[TaskCol.updated_at.ord])
     result.add(res)
+proc selectTaskTable*(db: DbConn, whereStr = "", whereVals: varargs[string, `$`]): seq[TaskTable] =
+  selectTaskTable(db, whereStr, @[], whereVals)
 proc updateTaskTable*(db: DbConn, rowData: TaskTable) =
   if rowData.primKey < 1: return
   var vals: seq[string]
