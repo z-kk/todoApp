@@ -16,6 +16,9 @@ type
 
   taskInfo* = ref taskInfoImpl
 
+func `$`*(task: taskInfo): string =
+  $task[]
+
 proc newTask*(title = "", status = tsNone): taskInfo =
   ## タスク作成
   return taskInfo(title: title, status: status)

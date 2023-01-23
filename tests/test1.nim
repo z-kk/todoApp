@@ -7,6 +7,11 @@ import
 test "correct welcome":
   check getWelcomeMessage() == "Hello, World!"
 
+test "to string":
+  var task = newTask("task1")
+  task.children.add newTask("task2")
+  check $task == """(id: 0, title: "task1", status: tsNone, children: @[(id: 0, title: "task2", status: tsNone, children: @[])])"""
+
 let dbName = "todo.db"
 var db: DbConn
 var testDir = currentSourcePath().parentDir
