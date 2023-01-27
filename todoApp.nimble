@@ -13,12 +13,14 @@ binDir        = "bin"
 # Dependencies
 
 requires "nim >= 1.6.0"
+requires "docopt"
 
 
 # Tasks
 
+import std / strutils
 task r, "build and run":
-  exec "nimble build"
+  exec "nimble build -d:Version=$1" % version
   exec "nimble ex"
 
 import std / os

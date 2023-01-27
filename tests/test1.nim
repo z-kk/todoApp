@@ -4,8 +4,8 @@ import
   std / [os],
   todoApppkg / [submodule, taskInfo, dbtables]
 
-test "correct welcome":
-  check getWelcomeMessage() == "Hello, World!"
+test "application name":
+  check appName == "test1"
 
 test "to string":
   var task = newTask("task1")

@@ -1,6 +1,30 @@
-# This is just an example to get you started. Users of your hybrid library will
-# import this file by writing ``import todoApppkg/submodule``. Feel free to rename or
-# remove this file altogether. You may create additional modules alongside
-# this file as required.
+import
+  std / [os, strutils],
+  docopt
 
-proc getWelcomeMessage*(): string = "Hello, World!"
+type
+  cmdOpt* = object
+    dbname*: string
+
+const
+  Version* {.strdefine.} = ""
+
+let
+  appName* = getAppFilename().extractFilename
+
+proc readCmdOpt*(): cmdOpt =
+  ## Read command line options.
+  let doc = """
+    $1
+
+    Usage:
+      $1 [<dbname>]
+
+    Options:
+      -h --help         Show this screen.
+      --version         Show version.
+      <dbname>          Database file name.
+  """ % [appName]
+  let args = doc.dedent.docopt(version = Version)
+  if args["<dbname>"]:
+    result.dbname = $args["<dbname>"]
