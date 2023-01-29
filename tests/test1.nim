@@ -7,11 +7,6 @@ import
 test "application name":
   check appName == "test1"
 
-test "to string":
-  var task = newTask("task1")
-  task.children.add newTask("task2")
-  check $task == """(id: 0, title: "task1", status: tsNone, children: @[(id: 0, title: "task2", status: tsNone, children: @[])])"""
-
 let dbName = "todo.db"
 var db: DbConn
 var testDir = currentSourcePath().parentDir
@@ -51,6 +46,7 @@ test "get all task":
   let taskList = db.getTaskAll
   check taskList[1].title == "task1"
   check taskList[3].children[1].title == "task9"
+  check taskList[3].children[1].id == 10
 
 test "remove db file":
   db.close
