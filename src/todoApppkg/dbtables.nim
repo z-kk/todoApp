@@ -4,7 +4,7 @@ import
 export
   db_sqlite,
   task
-proc openDb*(path = "todo.db"): DbConn =
+proc openDb*(path: string): DbConn =
   let db = open(path, "", "", "")
   return db
 proc createTables*(db: DbConn) =
