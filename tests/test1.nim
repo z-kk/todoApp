@@ -2,7 +2,7 @@ import unittest
 
 import
   std / [os],
-  todoApppkg / [submodule, taskInfo, dbtables]
+  todoApppkg / [submodule, taskInfo, dbtables, cli]
 
 test "application name":
   check appName == "test1"
@@ -47,6 +47,9 @@ test "get all task":
   check taskList[1].title == "task1"
   check taskList[3].children[1].title == "task9"
   check taskList[3].children[1].id == 10
+
+test "cli":
+  db.beginCli
 
 test "remove db file":
   db.close

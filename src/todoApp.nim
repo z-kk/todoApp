@@ -1,6 +1,6 @@
 import
   std / [strutils],
-  todoApppkg / [submodule, dbtables]
+  todoApppkg / [cli, submodule, dbtables]
 
 const
   DbName = "todo.db"
@@ -16,3 +16,5 @@ when isMainModule:
         opt.dbname.openDb
 
   db.createTables  # DBテーブルを作成
+
+  db.beginCli

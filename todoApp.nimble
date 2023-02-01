@@ -14,6 +14,7 @@ binDir        = "bin"
 
 requires "nim >= 1.6.0"
 requires "docopt"
+requires "cliSeqSelector"
 
 
 # Tasks
