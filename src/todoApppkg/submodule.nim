@@ -1,13 +1,11 @@
 import
   std / [os, strutils],
-  docopt
+  docopt,
+  version
 
 type
   cmdOpt* = object
     dbname*: string
-
-const
-  Version* {.strdefine.} = ""
 
 let
   appName* = getAppFilename().extractFilename
@@ -21,9 +19,9 @@ proc readCmdOpt*(): cmdOpt =
       $1 [<dbname>]
 
     Options:
-      -h --help         Show this screen.
-      --version         Show version.
-      <dbname>          Database file name.
+      -h --help     Show this screen.
+      -v --version  Show version.
+      <dbname>      Database file name.
   """ % [appName]
   let args = doc.dedent.docopt(version = Version)
   if args["<dbname>"]:

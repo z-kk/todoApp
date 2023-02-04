@@ -21,10 +21,25 @@ requires "cliSeqSelector"
 
 import std / strutils
 task r, "build and run":
-  exec "nimble build -d:Version=$1" % version
+  exec "nimble build"
   exec "nimble ex"
 
 import std / os
 task ex, "run without build":
   withDir binDir:
     exec "." / bin[0]
+
+
+# Before
+
+before build:
+  let versionFile = srcDir / bin[0] & "pkg" / "version.nim"
+  versionFile.parentDir.mkDir
+  versionFile.writeFile("const Version* = \"$1\"\n" % version)
+
+
+# After
+
+after build:
+  let versionFile = srcDir / bin[0] & "pkg" / "version.nim"
+  versionFile.writeFile("const Version* = \"\"\n")
