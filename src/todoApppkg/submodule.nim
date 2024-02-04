@@ -1,1 +1,2 @@
-proc getWelcomeMessage*(): string = "Hello, World!"
+const
+  DateFormat* = "yyyy-MM-dd"

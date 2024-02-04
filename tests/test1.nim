@@ -1,42 +1,40 @@
 import unittest
 import
-  std / [os, strutils, times, tables, osproc, envvars]
+  std / [os, strutils, times, tables, osproc, envvars],
+  todoApppkg / [taskdata, submodule]
 
-const
-  DateFormat = "yyyy-MM-dd"
-
-import todoApppkg/taskdata
 suite "taskdata":
   const
     EnvKey = "TASKDATA"
   let
     origEnv = EnvKey.getEnv
     tmpDataDir = "." / "data"
-  tmpDataDir.createDir
-  EnvKey.putEnv(tmpDataDir)
+
+  block setup:
+    tmpDataDir.createDir
+    EnvKey.putEnv(tmpDataDir)
   defer:
     EnvKey.putEnv(origEnv)
     tmpDataDir.removeDir
 
-  var
-    uuids: seq[string]
-  block makeTask:
-    let cmdFormat = "task add proj:$1 due:$2 $3"
-    discard execProcess(cmdFormat % ["proj1", "2100-01-01", "detail1"])
-    discard execProcess(cmdFormat % ["proj1", "2100-02-01", "detail2"])
-    discard execProcess(cmdFormat % ["proj1", "2100-03-01", "detail3"])
-    discard execProcess(cmdFormat % ["proj1", "2100-04-01", "detail4"])
-    discard execProcess(cmdFormat % ["proj1", "2100-05-01", "detail5"])
-    discard execProcess(cmdFormat % ["proj1", "2100-12-01", "title1"])
-    discard execProcess("task 6 mod dep:1-5")
-    for i in 1 .. 6:
-      uuids.add execProcess("task $1 uuids" % [$i]).replace("\n")
-    discard execProcess("task $1 done" % uuids[0])
-    discard execProcess("task $1 start" % uuids[1])
-    discard execProcess("task $1 mod wait:2100-01-01" % uuids[2])
-    discard execProcess("task $1 mod sch:2100-02-01" % uuids[3])
-
   test "get data":
+    var uuids: seq[string]
+    block makeTask:
+      let cmdFormat = "task add proj:$1 due:$2 $3"
+      discard execProcess(cmdFormat % ["proj1", "2100-01-01", "detail1"])
+      discard execProcess(cmdFormat % ["proj1", "2100-02-01", "detail2"])
+      discard execProcess(cmdFormat % ["proj1", "2100-03-01", "detail3"])
+      discard execProcess(cmdFormat % ["proj1", "2100-04-01", "detail4"])
+      discard execProcess(cmdFormat % ["proj1", "2100-05-01", "detail5"])
+      discard execProcess(cmdFormat % ["proj1", "2100-12-01", "title1"])
+      discard execProcess("task 6 mod dep:1-5")
+      for i in 1 .. 6:
+        uuids.add execProcess("task $1 uuids" % [$i]).replace("\n")
+      discard execProcess("task $1 done" % uuids[0])
+      discard execProcess("task $1 start" % uuids[1])
+      discard execProcess("task $1 mod wait:2100-01-01" % uuids[2])
+      discard execProcess("task $1 mod sch:2100-02-01" % uuids[3])
+
     let data = getTaskData()
     for idx, uuid in uuids:
       let dat = data[uuid]
@@ -66,3 +64,62 @@ suite "taskdata":
         check dat.title == "title1"
         check dat.children.len == 5
         check not dat.isDetail
+
+  block reset:
+    tmpDataDir.removeDir
+    tmpDataDir.createDir
+
+  test "add data":
+    var data: seq[TaskData]
+    block makeData:
+      for i in 1 .. 5:
+        var dat: TaskData
+        dat.uuid = "dummyId" & $i
+        dat.proj = "proj1"
+        dat.title = "detail" & $i
+        dat.due = ("2100-0$1-01" % [$i]).parse(DateFormat)
+        case i
+        of 1:
+          dat.status = Done
+        of 2:
+          dat.status = Doing
+        of 3:
+          dat.status = Hide
+          dat.waitFor = "2100-01-01".parse(DateFormat)
+        of 4:
+          dat.status = Waiting
+          dat.waitFor = "2100-02-01".parse(DateFormat)
+        else:
+          discard
+
+        data.add dat
+
+      var dat: TaskData
+      dat.uuid = "dummyId6"
+      dat.proj = "proj1"
+      dat.title = "title1"
+      dat.due = "2100-12-01".parse(DateFormat)
+      for i in 1 .. 5:
+        dat.children.add "dummyId" & $i
+      data.add dat
+
+    data.commit
+
+    let checkData = getTaskData()
+    check checkData.len == 6
+    for i, val in checkData:
+      case val.title
+      of "detail1":
+        check val.proj == "proj1"
+        check val.status == Done
+      of "detail2":
+        check val.due == "2100-02-01".parse(DateFormat)
+        check val.status == Doing
+      of "detail3":
+        check val.status == Hide
+      of "detail4":
+        check val.status == Waiting
+      of "detail5":
+        check val.status == Pending
+      of "title1":
+        check val.children.len == 5
