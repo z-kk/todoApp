@@ -14,13 +14,13 @@ type
     uuid*: string
     children*: seq[string]
     proj*: string
-    status*: TaskStatus
+    status: TaskStatus
     title*: string
     due*: DateTime
-    startAt*: DateTime
-    endAt*: DateTime
-    waitFor*: DateTime
-    isDetail*: bool
+    startAt: DateTime
+    endAt: DateTime
+    waitFor: DateTime
+    isDetail: bool
 
 const
   WarriorFormat = "yyyyMMdd'T'HHmmsszzz"
@@ -80,6 +80,35 @@ proc getTaskData*(): OrderedTable[string, TaskData] =
     for child in data.children:
       result[child].isDetail = true
 
+proc start*(data: var TaskData) =
+  case data.status
+  of Pending:
+    data.status = Doing
+  of Doing, Done:
+    discard
+  of Waiting, Hide:
+    data.status = Doing
+    data.waitFor = DateTime()
+
+proc done*(data: var TaskData) =
+  data.status = Done
+
+proc wait*(data: var TaskData, waitFor: DateTime) =
+  case data.status
+  of Pending, Hide:
+    data.status = Waiting
+    data.waitFor = waitFor
+  of Doing, Waiting, Done:
+    discard
+
+proc hide*(data: var TaskData, hideFor: DateTime) =
+  case data.status
+  of Pending, Waiting:
+    data.status = Hide
+    data.waitFor = hideFor
+  of Doing, Hide, Done:
+    discard
+
 proc commit*(data: seq[TaskData]) =
   let currentData = getTaskData()
   var uuidTable: Table[string, string]
@@ -132,3 +161,7 @@ proc commit*(data: seq[TaskData]) =
         depends.add child
     cmdLine.add depends.join(",")
     discard execProcess(cmdLine)
+
+proc status*(data: TaskData): TaskStatus = data.status
+proc waitFor*(data: TaskData): DateTime = data.waitFor
+proc isDetail*(data: TaskData): bool = data.isDetail

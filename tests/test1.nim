@@ -80,15 +80,13 @@ suite "taskdata":
         dat.due = ("2100-0$1-01" % [$i]).parse(DateFormat)
         case i
         of 1:
-          dat.status = Done
+          dat.done
         of 2:
-          dat.status = Doing
+          dat.start
         of 3:
-          dat.status = Hide
-          dat.waitFor = "2100-01-01".parse(DateFormat)
+          dat.hide("2100-01-01".parse(DateFormat))
         of 4:
-          dat.status = Waiting
-          dat.waitFor = "2100-02-01".parse(DateFormat)
+          dat.wait("2100-02-01".parse(DateFormat))
         else:
           discard
 
