@@ -121,3 +121,44 @@ suite "taskdata":
         check val.status == Pending
       of "title1":
         check val.children.len == 5
+
+  test "update data":
+    var data = getTaskData()
+    for uuid, dat in data:
+      data[uuid].proj = "proj2"
+      if dat.status in {Doing, Waiting, Hide}:
+        data[uuid].reset
+      data[uuid].children = @[]
+
+    data.commit
+
+    for _, dat in getTaskData():
+      if dat.title != "detail1":
+        check dat.proj == "proj2"
+        check dat.status == Pending
+
+    for uuid, dat in data:
+      case dat.title
+      of "detail2":
+        data[uuid].start
+      of "detail3":
+        data[uuid].hide("2100-01-01".parse(DateFormat))
+      of "detail4":
+        data[uuid].wait("2100-02-01".parse(DateFormat))
+      of "title1":
+        data[uuid].title = "title2"
+        for id, _ in data:
+          if id != uuid:
+            data[uuid].children.add id
+
+    data.commit
+
+    for _, dat in getTaskData():
+      case dat.title
+      of "detail2":
+        check dat.status == Doing
+      of "detail3":
+        check dat.status == Hide
+      of "detail4":
+        check dat.status == Waiting
+      check dat.isDetail != (dat.title == "title2")

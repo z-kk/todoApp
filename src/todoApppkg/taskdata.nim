@@ -1,6 +1,7 @@
 import
   std / [strutils, times, tables, osproc, json],
-  uuid4
+  uuid4,
+  submodule
 
 type
   TaskStatus* = enum
@@ -30,6 +31,14 @@ proc toCmdStr(node: JsonNode): string =
     if c in "\"{}":
       result.add '\\'
     result.add c
+
+proc isUpdated(data, current: TaskData): bool =
+  return data.children != current.children or
+    data.proj != current.proj or
+    data.status != current.status or
+    data.title != current.title or
+    data.due != current.due or
+    data.waitFor != current.waitFor
 
 proc getTaskData*(): OrderedTable[string, TaskData] =
   proc getStrValue(n: JsonNode, key: string): string =
@@ -90,6 +99,10 @@ proc start*(data: var TaskData) =
     data.status = Doing
     data.waitFor = DateTime()
 
+proc reset*(data: var TaskData) =
+  if data.status != Done:
+    data.status = Pending
+
 proc done*(data: var TaskData) =
   data.status = Done
 
@@ -115,7 +128,37 @@ proc commit*(data: seq[TaskData]) =
   for dat in data:
     assert dat.uuid != ""
     if dat.uuid in currentData:
-      discard
+      let current = currentData[dat.uuid]
+      if not dat.isUpdated(current) or current.status == Done:
+        continue
+
+      var cmdLine = @["task mod", dat.uuid]
+      case dat.status
+      of Pending:
+        cmdLine.add @["wait:", "sch:"]
+        if current.status == Doing:
+          discard execProcess("task $1 stop" % [dat.uuid])
+      of Doing:
+        cmdLine.add @["wait:", "sch:"]
+        if current.status != Doing:
+          discard execProcess("task $1 start" % [dat.uuid])
+      of Waiting:
+        cmdLine.add "wait:"
+        cmdLine.add "sch:" & dat.waitFor.format(DateFormat)
+      of Hide:
+        cmdLine.add "sch:"
+        cmdLine.add "wait:" & dat.waitFor.format(DateFormat)
+      of Done:
+        discard execProcess("task $1 done" % [dat.uuid])
+        continue
+
+      if dat.due != DateTime():
+        cmdLine.add "due:" & dat.due.format(DateFormat)
+      else:
+        cmdLine.add "due:"
+      cmdLine.add "proj:" & dat.proj
+      cmdLine.add dat.title
+      discard execProcess(cmdLine.join(" "))
     else:
       var j = %*{}
       try:
@@ -146,6 +189,8 @@ proc commit*(data: seq[TaskData]) =
   for dat in data:
     if dat.children.len == 0:
       continue
+    if dat.uuid in currentData and not dat.isUpdated(currentData[dat.uuid]):
+      continue
     var
       cmdLine = "task mod "
       depends: seq[string]
@@ -161,6 +206,12 @@ proc commit*(data: seq[TaskData]) =
         depends.add child
     cmdLine.add depends.join(",")
     discard execProcess(cmdLine)
+
+proc commit*(data: OrderedTable[string, TaskData]) =
+  var target: seq[TaskData]
+  for _, dat in data:
+    target.add dat
+  target.commit
 
 proc status*(data: TaskData): TaskStatus = data.status
 proc waitFor*(data: TaskData): DateTime = data.waitFor
