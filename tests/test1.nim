@@ -1,6 +1,6 @@
 import unittest
 import
-  std / [os, strutils, times, tables, osproc, envvars],
+  std / [os, strutils, times, tables, json, osproc, envvars],
   todoApppkg / [taskdata, submodule]
 
 suite "taskdata":
@@ -162,3 +162,46 @@ suite "taskdata":
       of "detail4":
         check dat.status == Waiting
       check dat.isDetail != (dat.title == "title2")
+
+  test "to json":
+    check getTaskData().toJson == %*[
+      {
+        "proj": "proj2",
+        "data": [
+          {
+            "title": "title2",
+            "status": "Pending",
+            "due": "2100-12-01",
+            "children": [
+              {
+                "title": "detail1",
+                "status": "Done",
+                "due": "2100-01-01",
+              },
+              {
+                "title": "detail2",
+                "status": "Doing",
+                "due": "2100-02-01",
+              },
+              {
+                "title": "detail3",
+                "status": "Hide",
+                "for": "2100-01-01",
+                "due": "2100-03-01",
+              },
+              {
+                "title": "detail4",
+                "status": "Waiting",
+                "for": "2100-02-01",
+                "due": "2100-04-01",
+              },
+              {
+                "title": "detail5",
+                "status": "Pending",
+                "due": "2100-05-01",
+              },
+            ],
+          },
+        ],
+      },
+    ]

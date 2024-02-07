@@ -1,5 +1,5 @@
 import
-  std / [strutils, times, tables, osproc, json],
+  std / [strutils, sequtils, times, tables, osproc, json, algorithm],
   uuid4,
   submodule
 
@@ -39,6 +39,63 @@ proc isUpdated(data, current: TaskData): bool =
     data.title != current.title or
     data.due != current.due or
     data.waitFor != current.waitFor
+
+proc sorted*(data: seq[TaskData]): seq[TaskData] =
+  var projects: seq[string]
+  for dat in data:
+    if dat.proj notin projects:
+      projects.add dat.proj
+
+  for proj in projects:
+    let dat = data.filterIt(it.proj == proj)
+    for d in dat.filterIt(not it.isDetail).sortedByIt(
+        if it.due != DateTime(): it.due
+        elif it.startAt != DateTime(): it.startAt
+        else: "9999-12-31".parse(DateFormat)
+      ):
+      result.add d
+      result.add dat.filterIt(it.uuid in d.children).sortedByIt(
+        if it.due != DateTime(): it.due
+        elif it.startAt != DateTime(): it.startAt
+        else: "9999-12-31".parse(DateFormat)
+      )
+
+proc sorted*(data: OrderedTable[string, TaskData]): OrderedTable[string, TaskData] =
+  var target: seq[TaskData]
+  for _, dat in data:
+    target.add dat
+  for dat in target.sorted:
+    result[dat.uuid] = dat
+
+proc toJson*(data: seq[TaskData]): JsonNode =
+  result = %*[]
+  for dat in data.sorted:
+    if result.len == 0 or result[^1]["proj"].getStr != dat.proj:
+      result.add %*{
+        "proj": dat.proj,
+        "data": [],
+      }
+
+    var j = %*{
+      "title": dat.title,
+      "status": dat.status,
+    }
+    if dat.due != DateTime():
+      j["due"] = %dat.due.format(DateFormat)
+    if dat.status in {Waiting, Hide}:
+      j["for"] = %dat.waitFor.format(DateFormat)
+
+    if not dat.isDetail:
+      j["children"] = %*[]
+      result[^1]["data"].add j
+    else:
+      result[^1]["data"][^1]["children"].add j
+
+proc toJson*(data: OrderedTable[string, TaskData]): JsonNode =
+  var target: seq[TaskData]
+  for _, dat in data:
+    target.add dat
+  return target.toJson
 
 proc getTaskData*(): OrderedTable[string, TaskData] =
   proc getStrValue(n: JsonNode, key: string): string =
@@ -88,6 +145,8 @@ proc getTaskData*(): OrderedTable[string, TaskData] =
   for key, data in result:
     for child in data.children:
       result[child].isDetail = true
+
+  return result.sorted
 
 proc start*(data: var TaskData) =
   case data.status
