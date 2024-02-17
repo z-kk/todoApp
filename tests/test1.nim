@@ -170,34 +170,34 @@ suite "taskdata":
         "data": [
           {
             "title": "title2",
-            "status": "Pending",
+            "status": Pending.ord,
             "due": "2100-12-01",
             "children": [
               {
                 "title": "detail1",
-                "status": "Done",
+                "status": Done.ord,
                 "due": "2100-01-01",
               },
               {
                 "title": "detail2",
-                "status": "Doing",
+                "status": Doing.ord,
                 "due": "2100-02-01",
               },
               {
                 "title": "detail3",
-                "status": "Hide",
+                "status": Hide.ord,
                 "for": "2100-01-01",
                 "due": "2100-03-01",
               },
               {
                 "title": "detail4",
-                "status": "Waiting",
+                "status": Waiting.ord,
                 "for": "2100-02-01",
                 "due": "2100-04-01",
               },
               {
                 "title": "detail5",
-                "status": "Pending",
+                "status": Pending.ord,
                 "due": "2100-05-01",
               },
             ],

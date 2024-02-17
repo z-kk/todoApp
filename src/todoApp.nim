@@ -1,5 +1,8 @@
 import
-  todoApppkg/submodule
+  todoApppkg / [webserver]
+
+const
+  DefaultPort = 5000
 
 when isMainModule:
-  echo(getWelcomeMessage())
+  startWebServer(DefaultPort)

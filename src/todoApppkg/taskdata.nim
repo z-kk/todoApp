@@ -78,7 +78,7 @@ proc toJson*(data: seq[TaskData]): JsonNode =
 
     var j = %*{
       "title": dat.title,
-      "status": dat.status,
+      "status": dat.status.ord,
     }
     if dat.due != DateTime():
       j["due"] = %dat.due.format(DateFormat)
