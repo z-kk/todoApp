@@ -164,38 +164,49 @@ suite "taskdata":
       check dat.isDetail != (dat.title == "title2")
 
   test "to json":
-    check getTaskData().toJson == %*[
+    let data = getTaskData()
+    var uuids: Table[string, string]
+    for uuid, dat in data:
+      uuids[dat.title] = uuid
+
+    check data.toJson == %*[
       {
         "proj": "proj2",
         "data": [
           {
+            "uuid": uuids["title2"],
             "title": "title2",
             "status": Pending.ord,
             "due": "2100-12-01",
             "children": [
               {
+                "uuid": uuids["detail1"],
                 "title": "detail1",
                 "status": Done.ord,
                 "due": "2100-01-01",
               },
               {
+                "uuid": uuids["detail2"],
                 "title": "detail2",
                 "status": Doing.ord,
                 "due": "2100-02-01",
               },
               {
+                "uuid": uuids["detail3"],
                 "title": "detail3",
                 "status": Hide.ord,
                 "for": "2100-01-01",
                 "due": "2100-03-01",
               },
               {
+                "uuid": uuids["detail4"],
                 "title": "detail4",
                 "status": Waiting.ord,
                 "for": "2100-02-01",
                 "due": "2100-04-01",
               },
               {
+                "uuid": uuids["detail5"],
                 "title": "detail5",
                 "status": Pending.ord,
                 "due": "2100-05-01",

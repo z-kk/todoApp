@@ -77,6 +77,7 @@ proc toJson*(data: seq[TaskData]): JsonNode =
       }
 
     var j = %*{
+      "uuid": dat.uuid,
       "title": dat.title,
       "status": dat.status.ord,
     }
@@ -204,9 +205,13 @@ proc commit*(data: seq[TaskData]) =
       of Waiting:
         cmdLine.add "wait:"
         cmdLine.add "sch:" & dat.waitFor.format(DateFormat)
+        if current.status == Doing:
+          discard execProcess("task $1 stop" % [dat.uuid])
       of Hide:
         cmdLine.add "sch:"
         cmdLine.add "wait:" & dat.waitFor.format(DateFormat)
+        if current.status == Doing:
+          discard execProcess("task $1 stop" % [dat.uuid])
       of Done:
         discard execProcess("task $1 done" % [dat.uuid])
         continue
