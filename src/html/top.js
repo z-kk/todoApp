@@ -69,6 +69,30 @@ function update() {
     });
 }
 
+function addButton(target) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.innerText = "add";
+    btn.classList.add(target);
+    btn.addEventListener('click', function() {
+        const node = {
+            "title": "",
+            "status": 0,
+            "uuid": Math.random().toString(16).substring(2),
+        };
+        const idx = this.parentNode.parentNode.rowIndex;
+        if (target == "proj") {
+            updateRow(select("#maintable").insertRow(idx - 1), node, true);
+            const ipt = document.createElement("input");
+            ipt.classList.add("proj");
+            select("#maintable").children[idx - 1].children[0].appendChild(ipt);
+        } else {
+            updateRow(select("#maintable").insertRow(idx), node, target == "title");
+        }
+    });
+    return btn;
+}
+
 function updateRow(tr, node, isTitle) {
     tr.insertCell();
     const ipt = document.createElement("input");
@@ -76,7 +100,7 @@ function updateRow(tr, node, isTitle) {
     if (isTitle) {
         ipt.classList.add("title");
         tr.insertCell().appendChild(ipt);
-        tr.insertCell();
+        tr.insertCell().appendChild(addButton("detail"));
     } else {
         ipt.classList.add("detail");
         tr.insertCell();
@@ -166,6 +190,7 @@ function resetData(data) {
         ipt.classList.add("proj");
         ipt.value = proj.proj
         tr.insertCell().appendChild(ipt);
+        tr.insertCell().appendChild(addButton("title"));
         for (title of filterStatus(proj.data)) {
             while (tbody.children.length < idx + 1) {
                 tbody.insertRow();
@@ -190,6 +215,7 @@ function resetData(data) {
     while (tbody.children[idx]) {
         tbody.removeChild(tbody.children[idx]);
     }
+    tbody.insertRow().insertCell().appendChild(addButton("proj"));
 }
 
 self.window.addEventListener('load', function() {
