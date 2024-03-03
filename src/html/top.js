@@ -1,10 +1,17 @@
+const holiday = [];
+
 function isWaitOrHide(val) {
     const sts = taskStatus[val];
     return (sts == "Waiting" || sts == "Hide");
 }
 
-function filterStatus(node) {
-    return node.filter((val) => { return taskStatus[val.status] != "Done" });
+function filterStatus(node, containHide) {
+    const res = node.filter((val) => { return taskStatus[val.status] != "Done" });
+    if (containHide) {
+        return res;
+    } else {
+        return res.filter((val) => { return taskStatus[val.status] != "Hide" });
+    }
 }
 
 function update() {
@@ -64,6 +71,7 @@ function update() {
             throw new Error(data.err);
         }
         resetData(data.data);
+        setMermaid(data.data);
     }).catch(err => {
         alert(err);
     });
@@ -176,7 +184,7 @@ function resetData(data) {
     const tbody = select("#maintable");
     let idx = 0;
     for (proj of data) {
-        if (filterStatus(proj.data).length == 0) {
+        if (filterStatus(proj.data, true).length == 0) {
             continue;
         }
         while (tbody.children.length < idx + 1) {
@@ -191,7 +199,7 @@ function resetData(data) {
         ipt.value = proj.proj
         tr.insertCell().appendChild(ipt);
         tr.insertCell().appendChild(addButton("title"));
-        for (title of filterStatus(proj.data)) {
+        for (title of filterStatus(proj.data, true)) {
             while (tbody.children.length < idx + 1) {
                 tbody.insertRow();
             }
@@ -200,7 +208,7 @@ function resetData(data) {
                 tr.removeChild(tr.firstChild);
             }
             updateRow(tr, title, true);
-            for (child of filterStatus(title.children)) {
+            for (child of filterStatus(title.children, true)) {
                 while (tbody.children.length < idx + 1) {
                     tbody.insertRow();
                 }
@@ -218,7 +226,80 @@ function resetData(data) {
     tbody.insertRow().insertCell().appendChild(addButton("proj"));
 }
 
+function setMermaid(data) {
+    const today = new Date();
+    let d = select(".mermaid");
+    if (d == null) {
+        d = document.createElement("div");
+        d.classList.add("mermaid");
+        select("main").prepend(d);
+    } else {
+        delete d.dataset.processed;
+    }
+    let mmd = `gantt
+        dateFormat YYYY-MM-DD
+        axisFormat %m/%d
+        excludes weekends ${holiday.join(" ")}
+    \n`
+    for (proj of data) {
+        if (filterStatus(proj.data, false).length == 0) {
+            continue;
+        }
+        if (proj.proj == "") {
+            proj.proj = "other";
+        }
+        mmd += `    section ${proj.proj}\n`;
+        for (title of filterStatus(proj.data, false)) {
+            let from = getDateString(today);
+            if (isWaitOrHide(title.status) && title.for > from) {
+                from = title.for;
+            }
+            let due = new Date(today.getTime());
+            if (title.due) {
+                due = new Date(title.due);
+            }
+            due.setDate(due.getDate() + 1);
+            mmd += `        ${title.title}: ${title.uuid},${from},${getDateString(due)}\n`;
+            for (child of filterStatus(title.children, false)) {
+                from = getDateString(today);
+                if (isWaitOrHide(child.status) && child.for > from) {
+                    from = child.for;
+                }
+                due = new Date(today.getTime());
+                if (child.due) {
+                    due = new Date(child.due);
+                }
+                due.setDate(due.getDate() + 1);
+                mmd += `        ${child.title}: ${child.uuid},${from},${getDateString(due)}\n`;
+            }
+        }
+    }
+    d.innerHTML = mmd;
+
+    const mermaidUrl = "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    import(mermaidUrl).then(module => {
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            module.default.init({theme: "dark", themeCSS: ".exclude-range {fill: #404040}"});
+        } else {
+            module.default.init();
+        }
+    });
+}
+
 self.window.addEventListener('load', function() {
+    fetch("https://holidays-jp.github.io/api/v1/date.json").then(response => {
+        if (!response.ok) {
+            throw new Error("response error");
+        }
+        return response.json();
+    }).then(data => {
+        for (key in data) {
+            holiday.push(key);
+        }
+    }).catch(err => {
+        alert(err);
+    });
+
     fetch(appName + "/data", {
         method: "GET",
     }).then(response => {
@@ -228,6 +309,7 @@ self.window.addEventListener('load', function() {
         return response.json();
     }).then(data => {
         resetData(data);
+        setMermaid(data);
     }).catch(err => {
         alert(err);
     });
