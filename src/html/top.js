@@ -16,7 +16,7 @@ function filterStatus(node, containHide) {
 
 function update() {
     const node = {uuid: this.value};
-    const tr = this.parentNode.parentNode;
+    const tr = this.parentNode.parentNode.parentNode;
     let proj = tr.querySelector(".proj");
     let idx = tr.rowIndex;
     while (proj == null) {
@@ -142,10 +142,8 @@ function updateRow(tr, node, isTitle) {
     let dt = document.createElement("input");
     dt.type = "date";
     dt.classList.add("for");
-    const d = document.createElement("div");
-    d.classList.add("row");
-    d.style.width = "100%";
-    d.style.marginLeft = "0";
+    let d = document.createElement("div");
+    d.classList.add("nowrap");
     d.appendChild(lbl);
     if (isWaitOrHide(node.status)) {
         dt.value = node.for;
@@ -169,15 +167,20 @@ function updateRow(tr, node, isTitle) {
     btn.classList.add("update");
     btn.value = node.uuid;
     btn.addEventListener('click', update);
-    cell = tr.insertCell();
-    cell.appendChild(btn);
+    d = document.createElement("div");
+    d.classList.add("nowrap");
+    d.appendChild(btn);
 
     btn = document.createElement("button");
     btn.type = "button";
     btn.innerText = "delete";
     btn.classList.add("delete");
+    btn.style.marginLeft = "2px";
     btn.value = node.uuid;
-    cell.appendChild(btn);
+    d.appendChild(btn);
+
+    cell = tr.insertCell();
+    cell.appendChild(d);
 }
 
 function resetData(data) {
