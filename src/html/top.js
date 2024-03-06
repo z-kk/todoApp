@@ -77,6 +77,28 @@ function update() {
     });
 }
 
+function deleteData() {
+    const node = {uuid: this.value};
+
+    fetch(appName + "/delete", {
+        method: "POST",
+        body: JSON.stringify(node),
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error("response error");
+        }
+        return response.json();
+    }).then(data => {
+        if (!data.result) {
+            throw new Error(data.err);
+        }
+        resetData(data.data);
+        setMermaid(data.data);
+    }).catch(err => {
+        alert(err);
+    });
+}
+
 function addButton(target) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -177,6 +199,7 @@ function updateRow(tr, node, isTitle) {
     btn.classList.add("delete");
     btn.style.marginLeft = "2px";
     btn.value = node.uuid;
+    btn.addEventListener('click', deleteData);
     d.appendChild(btn);
 
     cell = tr.insertCell();

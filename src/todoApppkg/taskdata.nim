@@ -143,9 +143,10 @@ proc getTaskData*(): OrderedTable[string, TaskData] =
 
     result[data.uuid] = data
 
-  for key, data in result:
+  for _, data in result:
     for child in data.children:
-      result[child].isDetail = true
+      if child in result:
+        result[child].isDetail = true
 
   return result.sorted
 
@@ -181,6 +182,14 @@ proc hide*(data: var TaskData, hideFor: DateTime) =
     data.waitFor = hideFor
   of Doing, Hide, Done:
     discard
+
+proc delete*(data: TaskData) =
+  let j = %*{
+    "uuid": data.uuid,
+    "description": data.title,
+    "status": "deleted",
+  }
+  discard execProcess("echo $1 | task import" % [j.toCmdStr])
 
 proc commit*(data: seq[TaskData]) =
   let currentData = getTaskData()

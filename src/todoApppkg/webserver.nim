@@ -27,8 +27,13 @@ proc makePage(req: Request, page: Page): string =
 
   return param.basePage
 
-proc updateData*(req: Request): JsonNode =
+proc updateData(req: Request): JsonNode =
   ## Update task data.
+  result = %*{
+    "result": false,
+    "err": "unknown error",
+  }
+
   let json = req.body.parseJson
   var data: TaskData
   data.uuid = json["uuid"].getStr
@@ -51,10 +56,29 @@ proc updateData*(req: Request): JsonNode =
     target.add parent
 
   target.commit
-  result = %*{
+  return %*{
     "result": true,
     "data": getTaskData().toJson,
   }
+
+proc deleteData(req: Request): JsonNode =
+  ## Delete task data.
+  result = %*{
+    "result": false,
+    "err": "unknown error",
+  }
+
+  let
+    data = getTaskData()
+    uuid = req.body.parseJson["uuid"].getStr
+  if uuid in data:
+    data[uuid].delete
+    return %*{
+      "result": true,
+      "data": getTaskData().toJson,
+    }
+  else:
+    result["err"] = %"uuid not in task"
 
 router rt:
   get "/":
@@ -63,6 +87,8 @@ router rt:
     resp getTaskData().toJson
   post "/update":
     resp request.updateData
+  post "/delete":
+    resp request.deleteData
 
 proc startWebServer*(port: int, appName = "") =
   let settings = newSettings(Port(port), appName = appName)

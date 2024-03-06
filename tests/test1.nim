@@ -216,3 +216,12 @@ suite "taskdata":
         ],
       },
     ]
+
+  test "delete data":
+    var uuid = ""
+    for _, data in getTaskData():
+      if data.title == "detail2":
+        uuid = data.uuid
+        data.delete
+        break
+    check uuid notin getTaskData()
