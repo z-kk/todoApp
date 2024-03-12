@@ -131,7 +131,7 @@ proc getTaskData*(): OrderedTable[string, TaskData] =
       data.status = Done
       data.endAt = j.getTimeValue("end")
     of "recurring":
-      discard
+      continue
 
     data.uuid = j.getStrValue("uuid")
     data.proj = j.getStrValue("project")
