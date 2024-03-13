@@ -116,7 +116,7 @@ proc getTaskData*(): OrderedTable[string, TaskData] =
 
     case j["status"].getStr
     of "pending":
-      if "wait" in j:
+      if "wait" in j and j.getTimeValue("wait") > now():
         data.status = Hide
         data.waitFor = j.getTimeValue("wait")
       elif "start" in j:
