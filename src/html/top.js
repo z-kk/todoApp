@@ -142,9 +142,9 @@ function updateRow(tr, node, isTitle) {
     sel.classList.add("status");
     sel.addEventListener('change', function() {
         if (isWaitOrHide(this.value)) {
-            show(this.parentNode.querySelector(".row"));
+            show(this.parentNode.querySelector("div.for"));
         } else {
-            hide(this.parentNode.querySelector(".row"));
+            hide(this.parentNode.querySelector("div.for"));
         }
     });
     for (let i = 0; i < taskStatus.length; i++) {
@@ -166,6 +166,7 @@ function updateRow(tr, node, isTitle) {
     dt.classList.add("for");
     let d = document.createElement("div");
     d.classList.add("nowrap");
+    d.classList.add("for");
     d.appendChild(lbl);
     if (isWaitOrHide(node.status)) {
         dt.value = node.for;
