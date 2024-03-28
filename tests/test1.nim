@@ -72,7 +72,7 @@ suite "taskdata":
   test "add data":
     var data: seq[TaskData]
     block makeData:
-      for i in 1 .. 5:
+      for i in 1 .. 6:
         var dat: TaskData
         dat.uuid = "dummyId" & $i
         dat.proj = "proj1"
@@ -87,13 +87,16 @@ suite "taskdata":
           dat.hide("2100-01-01".parse(DateFormat))
         of 4:
           dat.wait("2100-02-01".parse(DateFormat))
+        of 6:
+          dat.wait("2100-03-15".parse(DateFormat))
+          dat.due = DateTime()
         else:
           discard
 
         data.add dat
 
       var dat: TaskData
-      dat.uuid = "dummyId6"
+      dat.uuid = "dummyId" & $(data.len + 1)
       dat.proj = "proj1"
       dat.title = "title1"
       dat.due = "2100-12-01".parse(DateFormat)
@@ -104,7 +107,7 @@ suite "taskdata":
     data.commit
 
     let checkData = getTaskData()
-    check checkData.len == 6
+    check checkData.len == 7
     for i, val in checkData:
       case val.title
       of "detail1":
@@ -119,6 +122,8 @@ suite "taskdata":
         check val.status == Waiting
       of "detail5":
         check val.status == Pending
+      of "detail6":
+        check val.status == Waiting
       of "title1":
         check val.children.len == 5
 
@@ -145,6 +150,8 @@ suite "taskdata":
         data[uuid].hide("2100-01-01".parse(DateFormat))
       of "detail4":
         data[uuid].wait("2100-02-01".parse(DateFormat))
+      of "detail6":
+        data[uuid].wait("2100-03-15".parse(DateFormat))
       of "title1":
         data[uuid].title = "title2"
         for id, _ in data:
@@ -197,6 +204,12 @@ suite "taskdata":
                 "status": Hide.ord,
                 "for": "2100-01-01",
                 "due": "2100-03-01",
+              },
+              {
+                "uuid": uuids["detail6"],
+                "title": "detail6",
+                "status": Waiting.ord,
+                "for": "2100-03-15",
               },
               {
                 "uuid": uuids["detail4"],

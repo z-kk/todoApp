@@ -51,12 +51,14 @@ proc sorted*(data: seq[TaskData]): seq[TaskData] =
     for d in dat.filterIt(not it.isDetail).sortedByIt(
         if it.due != DateTime(): it.due
         elif it.startAt != DateTime(): it.startAt
+        elif it.waitFor != DateTime(): it.waitFor
         else: "9999-12-31".parse(DateFormat)
       ):
       result.add d
       result.add dat.filterIt(it.uuid in d.children).sortedByIt(
         if it.due != DateTime(): it.due
         elif it.startAt != DateTime(): it.startAt
+        elif it.waitFor != DateTime(): it.waitFor
         else: "9999-12-31".parse(DateFormat)
       )
 
