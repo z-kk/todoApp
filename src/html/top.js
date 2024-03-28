@@ -43,7 +43,7 @@ function update() {
     if (status) {
         node.status = status.value;
         if (isWaitOrHide(node.status)) {
-            const dt = tr.querySelector(".for");
+            const dt = tr.querySelector("input.for");
             if (dt && dt.value) {
                 node.for = dt.value;
             } else {
@@ -292,6 +292,9 @@ function setMermaid(data) {
                     from = getDateString(due);
                     gstatus = "milestone";
                 }
+            } else if (title.for) {
+                due = new Date(title.for);
+                gstatus = "milestone";
             }
             due.setDate(due.getDate() + 1);
             if (gstatus) {
